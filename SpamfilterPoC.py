@@ -9,17 +9,18 @@ from tkinter import filedialog
 
 # data processing libraries
 import pandas as pd
-from tokenizer import tokenize, TOK
+from nltk.tokenize import word_tokenize
 import nltk
 from nltk.stem import WordNetLemmatizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn import svm
 
-# initial setup for the lemmatizer, vectorizer and svm functions
-nltk.download("wordnet")
+#initial setup for the lemmatizer, vectorizer and svm functions
+from nltk.corpus import wordnet
 lemma = WordNetLemmatizer()
-vectorizer = TfidfVectorizer(stop_words="english", max_df=0.80)  # , min_df=0.20)
+vectorizer = TfidfVectorizer(stop_words="english") #, max_df=0.80)  # , min_df=0.20)
 model = svm.SVC()
 
 
@@ -27,50 +28,76 @@ model = svm.SVC()
 def run():
     df = pd.read_csv(file.name)
     file.close()
-    start_time = datetime.now()
-    text1.set(f"Started run at {start_time.strftime('%H:%M:%S')}\n")
-    text2.set("")
-    text3.set("")
-    text4.set("")
-    text5.set("")
-    text6.set("")
-    time.sleep(1)
-    run_model(df, start_time)
+    df, X = parse_data(df)
+    run_model(df, X)
+    df1, X1 = parse_data(pd.DataFrame({'text': ["Subject: naturally irresistible your corporate identity  lt is really hard to recollect a company : the  market is full of suqgestions and the information isoverwhelminq ; but a good  catchy logo , stylish statlonery and outstanding website  will make the task much easier .  we do not promise that havinq ordered a iogo your  company will automaticaily become a world ieader : it isguite ciear that  without good products , effective business organization and practicable aim it  will be hotat nowadays market ; but we do promise that your marketing efforts  will become much more effective . here is the list of clear  benefits : creativeness : hand - made , original logos , specially done  to reflect your distinctive company image . convenience : logo and stationery  are provided in all formats ; easy - to - use content management system letsyou  change your website content and even its structure . promptness : you  will see logo drafts within three business days . affordability : your  marketing break - through shouldn ' t make gaps in your budget . 100 % satisfaction  guaranteed : we provide unlimited amount of changes with no extra fees for you to  be surethat you will love the result of this collaboration . have a look at our  portfolio _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ not interested . . . _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"]}))
+    run_model(df1, X1)
 
 
-def run_model(df, start_time):
-    df["lemmatized"] = df["text"].apply(
-        lambda a: " ".join(
-            [
-                lemma.lemmatize(token.txt)
-                for token in tokenize(a)
-                if token.kind == TOK.WORD
-            ]
-        )
-    )
-    del df["text"]
-    text2.set(f"Finished formatting text at {datetime.now().strftime('%H:%M:%S')}\n")
+def parse_data(df):
+    #Tokenization :D
+    df['tokens'] = df['text'].apply(word_tokenize)
 
-    matrix = vectorizer.fit_transform(df["lemmatized"])
-    del df["lemmatized"]
-    df2 = pd.DataFrame(
-        data=matrix.toarray(), columns=vectorizer.get_feature_names_out()
-    )
-    text3.set(f"Finished vectorizing at {datetime.now().strftime('%H:%M:%S')}\n")
+    #Remove non alphabetic symbols
+    df['tokens'] = df['tokens'].apply(lambda tokens: [word for word in tokens if word.isalpha()])
 
-    x_train, x_test, y_train, y_test = train_test_split(df2, df["spam"], train_size=0.8)
-    text4.set(
-        f"Finished splitting into training and test datasets at {datetime.now().strftime('%H:%M:%S')}\n",
-    )
+    #LEMMATIZERRRR!!
+    df['lemmatized_tokens'] = df['tokens'].apply(lambda tokens: [lemma.lemmatize(word) for word in tokens])
 
-    model.fit(x_train, y_train)
-    text5.set(f"Finished training at {datetime.now().strftime('%H:%M:%S')}\n")
+    #Join the text back together
+    df['joined_text'] = df['lemmatized_tokens'].apply(lambda tokens: ' '.join(tokens))
 
-    # model.predict(x_test)
-    text6.set(f"\nAccuracy: {model.score(x_test, y_test)}\n")
+    print(df['joined_text'])
+    text_field.insert(END, df['joined_text'])
 
-    time_taken = datetime.now() - start_time
-    ready_var.set(f"Run completed in {str(time_taken)}")
+    #Vector
+    X = vectorizer.fit_transform(df['joined_text'])
+
+    vectorized = pd.DataFrame(X.toarray(), columns=vectorizer.get_feature_names_out())
+    print(vectorizer.get_feature_names_out())  #List of words (features)
+    text_field.insert(END, vectorizer.get_feature_names_out())
+
+    print(vectorized.head())
+    text_field.insert(END, vectorized.head())
+    return df, vectorized
+
+def run_model(df, X):
+    if 'spam' in df.columns:
+        X_train, X_test, y_train, y_test = train_test_split(X, df['spam'], test_size=0.2, random_state=42)
+        
+        print(f'Training set size: {X_train.shape[0]}')
+        text_field.insert(END, f'Training set size: {X_train.shape[0]}')
+        print(f'Testing set size: {X_test.shape[0]}')
+        text_field.insert(END, f'Testing set size: {X_test.shape[0]}')
+
+
+        #Train
+        model.fit(X_train, y_train)
+
+        #Predict
+        y_pred = model.predict(X_test)
+
+        #Accuracy
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Accuracy: {accuracy:.2f}')
+        text_field.insert(END, f'Accuracy: {accuracy:.2f}')
+
+        #Classification report
+        print('Classification Report:')
+        text_field.insert(END, 'Classification Report:')
+        print(classification_report(y_test, y_pred))
+        text_field.insert(END, classification_report(y_test, y_pred))
+
+        #Confusion matrix
+        print('Confusion Matrix:')
+        text_field.insert(END, 'Confusion Matrix:')
+        print(confusion_matrix(y_test, y_pred))
+        text_field.insert(END, confusion_matrix(y_test, y_pred))
+    else:
+        #Predict
+        y_pred = model.predict(X)
+        print(f'Predicted value: {y_pred}')
+        text_field.insert(END, f'Predicted value: {y_pred}')
 
 
 # choose a file to use for data
@@ -92,12 +119,6 @@ app.geometry("400x500")
 # initiate stringvariables
 file_var = StringVar()
 ready_var = StringVar()
-text1 = StringVar()
-text2 = StringVar()
-text3 = StringVar()
-text4 = StringVar()
-text5 = StringVar()
-text6 = StringVar()
 
 # create screen elements
 page_title = Label(
@@ -118,18 +139,8 @@ file_dialog_btn.pack(pady="10")
 run_button = Button(app, text="Run", command=run)
 run_button.pack(pady="10")
 
-text1_label = Label(app, textvariable=text1, font="Calibri 10")
-text1_label.pack()
-text2_label = Label(app, textvariable=text2, font="Calibri 10")
-text2_label.pack()
-text3_label = Label(app, textvariable=text3, font="Calibri 10")
-text3_label.pack()
-text4_label = Label(app, textvariable=text4, font="Calibri 10")
-text4_label.pack()
-text5_label = Label(app, textvariable=text5, font="Calibri 10")
-text5_label.pack()
-text6_label = Label(app, textvariable=text6, font="Calibri 16")
-text6_label.pack()
+text_field = Text(app, height = 25, width = 100)
+text_field.pack()
 
 ready_label = Label(app, textvariable=ready_var, font="Calibri 16")
 ready_label.pack()
