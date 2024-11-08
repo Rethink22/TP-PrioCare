@@ -45,20 +45,35 @@ model = svm.SVC()
 # run the program
 def run():
     # Load CSV file and process it
-    df = pd.read_csv(file.name, on_bad_lines='warn')
-    file.close()
+    try:
+        df = pd.read_csv(file.name, on_bad_lines='warn')
+        file.close()
+    except Exception as e:
+        text_field.insert(END, f"Error reading file: {str(e)}\n")
+        return
+
+    # Train the model with the CSV data
     df, X = parse_data(df)
-    df = df[["text", "userComplaint"]]
-    run_model(df, X)
+    if df is not None and X is not None:
+        df = df[["text", "userComplaint"]]
+        run_model(df, X)
 
-    # Take user input from the console
-    user_input = input("Enter a message to classify as a User Complaint or not: ")
+    # Allow the user to input multiple complaints
+    while True:
+        user_input = input("Voor uw klacht in (Type 'einde' om te stoppen): ")
+        
+        # Exit condition
+        if user_input.lower() == 'einde':
+            print("Programma beëindigd.")
+            break
 
-    # Process the user input
-    df1, X1 = parse_data(
-        pd.DataFrame({"text": [user_input]})
-    )
-    run_model(df1[["text"]], X1)
+        # Process the user input
+        df1, X1 = parse_data(pd.DataFrame({"text": [user_input]}))
+        
+        # Predict using the trained model
+        if df1 is not None and X1 is not None:
+            run_model(df1[["text"]], X1)
+
 
 
 def parse_data(df):
