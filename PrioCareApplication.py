@@ -28,19 +28,19 @@ model = svm.SVC()
 
 # run the program
 def run():
+    # Load CSV file and process it
     df = pd.read_csv(file.name, on_bad_lines='warn')
     file.close()
     df, X = parse_data(df)
-    df = df[["text", "spam"]]
+    df = df[["text", "userComplaint"]]
     run_model(df, X)
+
+    # Take user input from the console
+    user_input = input("Enter a message to classify as a User Complaint or not: ")
+
+    # Process the user input
     df1, X1 = parse_data(
-        pd.DataFrame(
-            {
-                "text": [
-                    "Subject: naturally irresistible your corporate identity  lt is really hard to recollect a company : the  market is full of suqgestions and the information isoverwhelminq ; but a good  catchy logo , stylish statlonery and outstanding website  will make the task much easier .  we do not promise that havinq ordered a iogo your  company will automaticaily become a world ieader : it isguite ciear that  without good products , effective business organization and practicable aim it  will be hotat nowadays market ; but we do promise that your marketing efforts  will become much more effective . here is the list of clear  benefits : creativeness : hand - made , original logos , specially done  to reflect your distinctive company image . convenience : logo and stationery  are provided in all formats ; easy - to - use content management system letsyou  change your website content and even its structure . promptness : you  will see logo drafts within three business days . affordability : your  marketing break - through shouldn ' t make gaps in your budget . 100 % satisfaction  guaranteed : we provide unlimited amount of changes with no extra fees for you to  be surethat you will love the result of this collaboration . have a look at our  portfolio _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ not interested . . . _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _"
-                ]
-            }
-        )
+        pd.DataFrame({"text": [user_input]})
     )
     run_model(df1[["text"]], X1)
 
@@ -66,7 +66,7 @@ def parse_data(df):
     text_field.insert(END, df["joined_text"])
 
     # Vector
-    if "spam" in df.columns:
+    if "userComplaint" in df.columns:
         X = vectorizer.fit_transform(df["joined_text"])
     else:
         X = vectorizer.transform(df["joined_text"])
@@ -75,9 +75,9 @@ def parse_data(df):
 
 
 def run_model(df, X):
-    if "spam" in df.columns:
+    if "userComplaint" in df.columns:
         X_train, X_test, y_train, y_test = train_test_split(
-            X, df["spam"], test_size=0.2, random_state=42
+            X, df["userComplaint"], test_size=0.2, random_state=42
         )
 
         print(f"Training set size: {X_train.shape[0]}")
@@ -127,7 +127,7 @@ def open_file_dialog():
 
 # make the app window
 app = Tk()
-app.title("Spamfilter PoC")
+app.title("PrioCare_assistant")
 app.geometry("400x500")
 
 # initiate stringvariables
@@ -137,7 +137,7 @@ ready_var = StringVar()
 # create screen elements
 page_title = Label(
     app,
-    text="Spamfilter PoC",
+    text="PrioCare Assistant",
     font="Calibri 24 bold",
 )
 page_title.pack()
