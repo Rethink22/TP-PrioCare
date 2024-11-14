@@ -50,7 +50,7 @@ def run():
         df = pd.read_csv(file.name, on_bad_lines='warn')
         file.close()
     except Exception as e:
-        text_field.insert(END, f"Error reading file: {str(e)}\n")
+        output_text_field.insert(END, f"Error reading file: {str(e)}\n")
         return
 
     # Train the model with the CSV data
@@ -58,25 +58,6 @@ def run():
     if df is not None and X is not None:
         df = df[["text", "userComplaint"]]
         run_model(df, X)
-
-    # Allow the user to input multiple complaints
-    while True:
-        user_input = input("Voer uw klacht in (Type 'einde' om te stoppen): ")
-        
-        # Exit condition
-        if user_input.lower() == 'einde':
-            print("Programma beëindigd.")
-            break
-
-        # Process the user input
-        df1, X1 = parse_data(pd.DataFrame({"text": [user_input]}))
-        
-        # Predict using the trained model
-        if df1 is not None and X1 is not None:
-            run_model(df1[["text"]], X1)
-    app.destroy()
-
-
 
 def parse_data(df):
     # Tokenization :D
@@ -96,7 +77,7 @@ def parse_data(df):
     df["joined_text"] = df["lemmatized_tokens"].apply(lambda tokens: " ".join(tokens))
 
     print(df["joined_text"])
-    text_field.insert(END, df["joined_text"])
+    output_text_field.insert(END, df["joined_text"])
 
     # Vector
     if "userComplaint" in df.columns:
@@ -114,9 +95,9 @@ def run_model(df, X):
         )
 
         print(f"Training set size: {X_train.shape[0]}")
-        text_field.insert(END, f"Training set size: {X_train.shape[0]}")
+        output_text_field.insert(END, f"Training set size: {X_train.shape[0]}")
         print(f"Testing set size: {X_test.shape[0]}")
-        text_field.insert(END, f"Testing set size: {X_test.shape[0]}")
+        output_text_field.insert(END, f"Testing set size: {X_test.shape[0]}")
 
         # Train
         model.fit(X_train, y_train)
@@ -127,24 +108,24 @@ def run_model(df, X):
         # Accuracy
         accuracy = accuracy_score(y_test, y_pred)
         print(f"Accuracy: {accuracy:.2f}")
-        text_field.insert(END, f"Accuracy: {accuracy:.2f}")
+        output_text_field.insert(END, f"Accuracy: {accuracy:.2f}")
 
         # Classification report
         print("Classification Report:")
-        text_field.insert(END, "Classification Report:")
+        output_text_field.insert(END, "Classification Report:")
         print(classification_report(y_test, y_pred))
-        text_field.insert(END, classification_report(y_test, y_pred))
+        output_text_field.insert(END, classification_report(y_test, y_pred))
 
         # Confusion matrix
         print("Confusion Matrix:")
-        text_field.insert(END, "Confusion Matrix:")
+        output_text_field.insert(END, "Confusion Matrix:")
         print(confusion_matrix(y_test, y_pred))
-        text_field.insert(END, confusion_matrix(y_test, y_pred))
+        output_text_field.insert(END, confusion_matrix(y_test, y_pred))
     else:
         # Predict
         y_pred = model.predict(X)
         print(f"Predicted value: {y_pred}")
-        text_field.insert(END, f"Predicted value: {y_pred}")
+        output_text_field.insert(END, f"Predicted value: {y_pred}")
 
 
 # choose a file to use for data
@@ -156,6 +137,22 @@ def open_file_dialog():
         file_var.set("Je hebt het volgende bestand geselecteerd:\n" + file.name)
     except:
         file_var.set("Je hebt geen bestand geselecteerd of er is iets mis gegaan")
+
+
+def printInput(): 
+    user_input = input_text_field.get(1.0, END)
+    input_text_field.delete(1.0, END)
+    
+    if user_input.lower() == 'einde':
+        print("Programma beëindigd.")
+        app.destroy()
+
+    # Process the user input
+    df1, X1 = parse_data(pd.DataFrame({"text": [user_input]}))
+    
+    # Predict using the trained model
+    if df1 is not None and X1 is not None:
+        run_model(df1[["text"]], X1)
 
 
 # make the app window
@@ -186,8 +183,20 @@ file_dialog_btn.pack(pady="10")
 run_button = Button(app, text="Run", command=run)
 run_button.pack(pady="10")
 
-text_field = Text(app, height=25, width=100)
-text_field.pack()
+input_label = Label(app, text="Voer uw klacht in (Type 'einde' om te stoppen):", font="Calibri 16")
+input_label.pack()
+
+input_text_field = Text(app, height=10, width=100)
+input_text_field.pack()
+
+printButton = Button(app, text = "Verstuur", command = printInput) 
+printButton.pack()
+
+output_label = Label(app, text="Programma output:", font="Calibri 16")
+output_label.pack()
+
+output_text_field = Text(app, height=15, width=100)
+output_text_field.pack()
 
 ready_label = Label(app, textvariable=ready_var, font="Calibri 16")
 ready_label.pack()
