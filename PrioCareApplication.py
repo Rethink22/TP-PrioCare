@@ -37,6 +37,7 @@ from sklearn import svm
 from nltk.corpus import wordnet
 
 nltk.download("punkt_tab")
+nltk.download("wordnet")
 lemma = WordNetLemmatizer()
 vectorizer = TfidfVectorizer(stop_words="english")  # , max_df=0.80)  # , min_df=0.20)
 model = svm.SVC()
@@ -60,7 +61,7 @@ def run():
 
     # Allow the user to input multiple complaints
     while True:
-        user_input = input("Voor uw klacht in (Type 'einde' om te stoppen): ")
+        user_input = input("Voer uw klacht in (Type 'einde' om te stoppen): ")
         
         # Exit condition
         if user_input.lower() == 'einde':
@@ -73,6 +74,7 @@ def run():
         # Predict using the trained model
         if df1 is not None and X1 is not None:
             run_model(df1[["text"]], X1)
+    app.destroy()
 
 
 
