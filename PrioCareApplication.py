@@ -138,9 +138,10 @@ def printInput():
     user_input = input_text_field.get(1.0, END)
     input_text_field.delete(1.0, END)
     
-    if user_input.lower() == 'einde':
+    if user_input.lower().startswith('einde'):
         print("Programma beëindigd.")
         app.destroy()
+        return
 
     # Process the user input
     df1, X1 = parse_data(pd.DataFrame({"text": [user_input]}))
