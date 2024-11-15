@@ -14,10 +14,6 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# general libraries
-from datetime import datetime
-import time
-
 # UI libraries
 from tkinter import *
 from tkinter.ttk import *
@@ -34,10 +30,9 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn import svm
 
 # initial setup for the lemmatizer, vectorizer and svm functions
-from nltk.corpus import wordnet
-
 nltk.download("punkt_tab")
 nltk.download("wordnet")
+from nltk.corpus import wordnet
 lemma = WordNetLemmatizer()
 vectorizer = TfidfVectorizer(stop_words="english")  # , max_df=0.80)  # , min_df=0.20)
 model = svm.SVC()
@@ -183,7 +178,7 @@ file_dialog_btn.pack(pady="10")
 run_button = Button(app, text="Run", command=run)
 run_button.pack(pady="10")
 
-input_label = Label(app, text="Voer uw klacht in (Type 'einde' om te stoppen):", font="Calibri 16")
+input_label = Label(app, text="Voer uw klacht in (Type 'einde' om te stoppen):", font="Calibri 14")
 input_label.pack()
 
 input_text_field = Text(app, height=10, width=100)
@@ -192,7 +187,7 @@ input_text_field.pack()
 printButton = Button(app, text = "Verstuur", command = printInput) 
 printButton.pack()
 
-output_label = Label(app, text="Programma output:", font="Calibri 16")
+output_label = Label(app, text="Programma output:", font="Calibri 14")
 output_label.pack()
 
 output_text_field = Text(app, height=15, width=100)
